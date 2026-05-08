@@ -13,10 +13,7 @@ CommitAI turns staged git diffs into clean Conventional Commit messages, concise
 
 ## Demo
 
-<video controls muted loop playsinline width="100%">
-	<source src="demo/ScreenRecording.mp4" type="video/mp4">
-	Your browser does not support inline video. View the recording in the demo folder.
-</video>
+Go to Demo Folder and download the mp4 file...
 
 CommitAI can auto-generate commits from staged diffs, support a `git commit` hook workflow, and keep `CHANGELOG.md` updated without relying on any external API.
 

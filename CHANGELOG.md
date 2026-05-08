@@ -4,6 +4,10 @@
 
 * Updated the project workflow.
 
+## 2026-05-09 * Implemented AI-powered generation for commit messages and changelogs.
+
+* Updated the project workflow.
+
 ## 2026-05-09 * Added automatic changelog and PR description generation features.
 
 * Updated the project workflow.
