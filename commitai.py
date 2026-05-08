@@ -474,27 +474,30 @@ def main() -> int:
             console.print(Panel(pr_description, title="Pull request description", border_style="magenta"))
             return 0
 
+        with console.status("[bold cyan]📝 Generating changelog entry..."):
+            changelog_entry = build_changelog_entry(commit_message, diff_stat, diff, args.model)
+
+        if args.changelog_only:
+            with console.status("[bold cyan]📝 Updating changelog..."):
+                prepend_changelog(changelog_entry)
+            render_success("done", "Changelog updated. No commit was created.")
+            return 0
+
+        with console.status("[bold cyan]📝 Staging changelog..."):
+            prepend_changelog(changelog_entry)
+            stage_changelog()
+
         final_commit_message = commit_message
         if not args.no_confirm and os.environ.get("COMMITAI_HOOK") != "1":
             final_commit_message = prompt_for_edit(commit_message)
             final_commit_message = sanitize_commit_message(final_commit_message, suggested_type, suggested_scope)
-
-        with console.status("[bold cyan]📝 Updating changelog..."):
-            changelog_entry = build_changelog_entry(final_commit_message, diff_stat, diff, args.model)
-            prepend_changelog(changelog_entry)
-            if not args.changelog_only:
-                stage_changelog()
-
-        if args.changelog_only:
-            render_success("done", "Changelog updated. No commit was created.")
-            return 0
 
         if os.environ.get("COMMITAI_HOOK") == "1":
             write_commit_message_file(final_commit_message)
             render_success("hook", "Commit message prepared for git commit.")
             return 0
 
-        with console.status("[bold cyan]🚀 Creating git commit..."):
+        with console.status("[bold cyan]🚀 Creating commit..."):
             commit_changes(final_commit_message)
 
         render_success("success", f"Committed with message:\n{final_commit_message}")
