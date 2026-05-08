@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-05-09 * Added automatic changelog and PR description generation features.
+
+* Updated the project workflow.
+
 ## 2024-05-15 * Fixed a critical bug in the dependency resolution process.
 
 * Updated the project workflow.
