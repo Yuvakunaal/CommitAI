@@ -1,5 +1,9 @@
 # Changelog
 
+## 2024-05-15 * Fixed a critical bug in the dependency resolution process.
+
+* Updated the project workflow.
+
 ## 2026-05-09 * Added local AI commit message generation with changelog updates.
 
 * Updated the project workflow.

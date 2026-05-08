@@ -1,80 +1,137 @@
-# commitai
+# CommitAI
 
-commitai is a local-first AI Git assistant for Python developers. It reads the staged diff, asks a local Ollama model for a Conventional Commit message, writes a changelog entry, and can create the git commit for you.
+> Local-first AI Git assistant for Conventional Commits, changelogs, and PR descriptions.
+
+[![Python](https://img.shields.io/badge/Python-3.13+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Ollama](https://img.shields.io/badge/Ollama-local-000000?logo=ollama&logoColor=white)](https://ollama.com/)
+[![Gemma 4](https://img.shields.io/badge/Gemma%204-gemma4:e2b-4A90E2)](https://ollama.com/library/gemma4)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
+
+CommitAI turns staged git diffs into clean Conventional Commit messages, concise changelog entries, and practical PR descriptions. It runs entirely on your machine with Ollama and Gemma 4, making it a fast, private, offline-friendly Git assistant built for real developer workflows.
+
+---
+
+## Demo
+
+![Demo](demo/demo.gif)
+
+CommitAI can auto-generate commits from staged diffs, support a `git commit` hook workflow, and keep `CHANGELOG.md` updated without relying on any external API.
+
+---
 
 ## Features
 
 - AI-generated Conventional Commit messages
-- Automatic changelog entries in `CHANGELOG.md`
-- Local-only inference through Ollama
-- Beautiful terminal output with `rich`
-- Interactive confirmation and edit flow
-- `--no-confirm`, `--changelog-only`, `--model`, and `--pr` flags
-- Git hook support for `git commit` workflows
+- Automatic changelog generation
+- PR description generation
+- Git hook integration
+- Fully local using Ollama
+- Gemma 4 powered
+- Rich terminal UI
+- No external APIs
+- Offline-first workflow
 
-## Why Gemma 4
+---
 
-`gemma4:e2b` is a practical fit for a lightweight developer tool on an 8 GB MacBook Air. It stays local, keeps latency low, and produces useful commit summaries without sending source code to an external API.
+## Why CommitAI
 
-## Local-First Benefits
+Writing commit messages is one of those tasks every developer does constantly and usually does at the end of a session when context is already fading. The result is the same repetitive workflow: inspect the diff, decide on a commit type, summarize the change, then repeat it again for changelog notes or a pull request description.
 
-- Your staged code never leaves your machine
-- No cloud API keys or rate limits
-- Fast feedback for small commit workflows
-- Works offline once Ollama and the model are available
+CommitAI removes that friction. It uses the staged diff as context, drafts the message for you, and keeps the whole workflow local. That means you get a faster loop without cloud dependency, external API keys, or source code leaving your machine.
 
-## Requirements
+---
 
-- Python 3.13
-- Git
-- Ollama running locally
-- `gemma4:e2b` or another compatible model
+## Architecture
+
+```text
+Git Diff
+↓
+CommitAI
+↓
+Ollama API
+↓
+Gemma 4
+↓
+AI-generated commit/changelog
+↓
+Git commit execution
+```
+
+The flow is intentionally small: CommitAI reads staged changes, sends a focused prompt to Ollama, normalizes the model output into a Conventional Commit format, writes the changelog entry, and then completes the git workflow.
+
+---
 
 ## Installation
 
 ```bash
-pip install -r requirements.txt
-ollama pull gemma4:e2b
+git clone https://github.com/Yuvakunaal/CommitAI.git
+cd CommitAI
+python3 -m pip install -r requirements.txt
 ```
 
-## Ollama Setup
-
-Start Ollama if it is not already running:
+Install and start Ollama if needed:
 
 ```bash
 ollama serve
+ollama pull gemma4:e2b
 ```
 
-If you want a different model, install it in Ollama and pass it with `--model`.
+Set up the git hook:
+
+```bash
+chmod +x hooks/prepare-commit-msg
+cp hooks/prepare-commit-msg .git/hooks/prepare-commit-msg
+```
+
+---
 
 ## Usage
 
-Stage your changes first:
+Basic commit flow:
 
 ```bash
-git add .
 python commitai.py
 ```
 
-Common commands:
+Runs the full local workflow: reads the staged diff, generates a commit message, updates the changelog, and commits the result.
+
+Skip the confirmation prompt:
 
 ```bash
 python commitai.py --no-confirm
-python commitai.py --model llama3
-python commitai.py --changelog-only
+```
+
+Useful when you already trust the generated message and want a faster path to the final commit.
+
+Generate a PR description:
+
+```bash
 python commitai.py --pr
 ```
 
-## CLI Flags
+Prints a concise pull request description based on the staged diff instead of creating a commit.
 
-- `--no-confirm` skips the confirmation prompt and commits immediately.
-- `--changelog-only` updates `CHANGELOG.md` without creating a commit.
-- `--model MODEL_NAME` selects a different local Ollama model.
-- `--pr` prints a pull request description instead of committing.
+Use a different Ollama model:
 
-## Git Hook Integration
+```bash
+python commitai.py --model llama3
+```
 
-commitai can be wired into `git commit` with a `prepare-commit-msg` hook.
+This is handy if you want to compare models or switch to another local model.
+
+Commit directly with git once the hook is installed:
+
+```bash
+git commit
+```
+
+The hook triggers CommitAI during `prepare-commit-msg`, so the generated message becomes part of the same commit flow.
+
+---
+
+## Git Hook Setup
+
+CommitAI includes a `prepare-commit-msg` hook for automatic commit message generation.
 
 1. Make the hook executable:
 
@@ -82,74 +139,76 @@ commitai can be wired into `git commit` with a `prepare-commit-msg` hook.
 chmod +x hooks/prepare-commit-msg
 ```
 
-2. Copy it into your repository hooks directory:
+2. Copy it into Git's hook directory:
 
 ```bash
 cp hooks/prepare-commit-msg .git/hooks/prepare-commit-msg
 ```
 
-3. Commit as usual:
+3. Commit normally:
 
 ```bash
 git commit
 ```
 
-The hook runs commitai in non-interactive mode, generates the commit message, and lets git continue with the prepared message.
+The hook uses `COMMITAI_HOOK=1` so CommitAI writes the generated message into Git's commit message file instead of recursively invoking another commit.
 
-The provided hook sets `COMMITAI_HOOK=1` so commitai writes the generated message into git's commit message file instead of recursively spawning another commit.
+---
+
+## Why Gemma 4
+
+CommitAI uses `gemma4:e2b` because it is a strong fit for a lightweight local workflow. It is small enough to run comfortably on an 8 GB MacBook Air, fast enough for developer feedback loops, and capable enough to summarize staged diffs into useful commit messages and changelog entries.
+
+That matters here because the task is not open-ended chat. It is structured reasoning over a git diff. Gemma 4 handles that well while keeping inference local, private, and dependable for everyday use.
+
+- Lightweight local model
+- Fast enough for commit workflows
+- Well suited to low-memory systems
+- Strong enough for diff summarization
+- Privacy-friendly local inference
+
+---
 
 ## Screenshots
 
-Add terminal screenshots in the `screenshots/` directory to show the commit flow, confirmation prompt, and changelog updates.
+Add terminal screenshots here when you capture the workflow in action:
 
-## Demo GIF
+- `screenshots/cli.png`
+- `screenshots/hook.png`
 
-Add a short walkthrough GIF at `demo/demo.gif` to show the full commit workflow in action.
+---
 
-## Architecture
+## Roadmap
 
-commitai keeps the workflow intentionally small:
+- Semantic release notes
+- Multi-model support
+- VS Code extension
+- Diff summarization
+- Team changelog modes
 
-1. Read the staged diff from git.
-2. Inspect recent commit subjects and changed files.
-3. Send a focused prompt to Ollama.
-4. Normalize the AI response into a Conventional Commit message.
-5. Append a changelog entry.
-6. Commit the staged work or prepare the hook message file.
+---
 
-This keeps the tool easy to understand, easy to maintain, and safe to run locally.
+## Tech Stack
 
-## Example Output
+- Python
+- Ollama
+- Gemma 4
+- Rich
+- Git hooks
 
-```text
-🔍 Reading staged diff...
-🤖 Asking Ollama...
-✅ Generated commit message
-📝 Updating changelog...
-✅ Commit completed
-```
+---
 
-## Changelog Format
+## Contributing
 
-`CHANGELOG.md` uses a simple date-based entry format:
+Contributions are welcome. Keep changes focused, readable, and local-first. If you're proposing a new feature, prefer simple implementations that preserve the current developer workflow instead of adding unnecessary abstraction.
 
-```md
-## 2026-05-09
+1. Fork the repository
+2. Create a branch for your change
+3. Test the workflow locally
+4. Open a pull request with a clear description
 
-- Added AI commit generation support.
-```
+---
 
-## Project Structure
+## License
 
-```text
-commitai/
-├── commitai.py
-├── CHANGELOG.md
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── hooks/
-│   └── prepare-commit-msg
-├── demo/
-└── screenshots/
-```
+MIT
